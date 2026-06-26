@@ -1,0 +1,30 @@
+{
+  "users": {
+    "guest":   { "roles": ["public"] },
+    "analyst": { "roles": ["public", "finance"] },
+    "ceo":     { "roles": ["public", "finance", "exec", "admin"] }
+  },
+  "questions": [
+    { "id": "q1", "query": "What was Helios Energy's total revenue in 2025?",
+      "expectedAnswerContains": ["4.2", "billion"], "relevantDocs": ["helios_annual_2025.pdf"],
+      "minRole": "public" },
+    { "id": "q2", "query": "How many people did Helios Energy employ in 2025?",
+      "expectedAnswerContains": ["7,300"], "relevantDocs": ["helios_annual_2025.pdf"], "minRole": "public" },
+    { "id": "q3", "query": "Which Helios product line grew fastest and by how much?",
+      "expectedAnswerContains": ["Grid Storage", "34"], "relevantDocs": ["helios_annual_2025.pdf"], "minRole": "public" },
+    { "id": "q4", "query": "What revenue did Helios earn in Europe?",
+      "expectedAnswerContains": ["1.9"], "relevantDocs": ["helios_annual_2025.pdf"], "minRole": "public" },
+    { "id": "q5", "query": "What was Nimbus Software's revenue and growth rate in 2025?",
+      "expectedAnswerContains": ["1.6", "25"], "relevantDocs": ["nimbus_annual_2025.pdf"], "minRole": "public" },
+    { "id": "q6", "query": "What share of Nimbus revenue came from Nimbus Meet?",
+      "expectedAnswerContains": ["60"], "relevantDocs": ["nimbus_annual_2025.pdf"], "minRole": "public" },
+    { "id": "q7", "query": "What was Orion Logistics' net profit margin in 2025?",
+      "expectedAnswerContains": ["9.5"], "relevantDocs": ["orion_financials_2025.pdf"], "minRole": "finance" },
+    { "id": "q8", "query": "What fraction of Orion's operating costs was fuel?",
+      "expectedAnswerContains": ["38"], "relevantDocs": ["orion_financials_2025.pdf"], "minRole": "finance" },
+    { "id": "q9", "query": "How much is Helios offering to acquire Nimbus Software for?",
+      "expectedAnswerContains": ["3.1", "billion"], "relevantDocs": ["helios_ma_memo.pdf"], "minRole": "exec" },
+    { "id": "q10", "query": "When is the proposed Helios-Nimbus deal expected to close?",
+      "expectedAnswerContains": ["Q3 2026"], "relevantDocs": ["helios_ma_memo.pdf"], "minRole": "exec" }
+  ]
+}

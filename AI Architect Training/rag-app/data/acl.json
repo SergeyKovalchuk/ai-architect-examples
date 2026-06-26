@@ -1,0 +1,6 @@
+{
+  "helios_annual_2025.pdf":   { "title": "Helios Energy — Annual Report 2025", "allowedRoles": ["public"] },
+  "nimbus_annual_2025.pdf":   { "title": "Nimbus Software — Annual Report 2025", "allowedRoles": ["public"] },
+  "orion_financials_2025.pdf":{ "title": "Orion Logistics — Confidential Financials 2025", "allowedRoles": ["finance", "exec", "admin"] },
+  "helios_ma_memo.pdf":       { "title": "Helios Energy — Confidential M&A Memo", "allowedRoles": ["exec", "admin"] }
+}

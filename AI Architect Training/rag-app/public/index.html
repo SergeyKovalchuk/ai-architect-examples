@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>RAG Document Analyzer</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.3/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.9/dist/vis-network.min.js"></script>
+<style>
+  :root { --bg:#0f172a; --panel:#1e293b; --muted:#94a3b8; --txt:#e2e8f0; --accent:#14b8a6; --line:#334155; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,sans-serif; background:var(--bg); color:var(--txt); }
+  header { padding:18px 24px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+  h1 { font-size:18px; margin:0; }
+  .pill { background:var(--panel); border:1px solid var(--line); border-radius:999px; padding:4px 12px; font-size:12px; color:var(--muted); }
+  main { display:grid; grid-template-columns:1fr 1fr; gap:18px; padding:18px 24px; }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px; }
+  .panel h2 { font-size:14px; margin:0 0 12px; color:var(--accent); text-transform:uppercase; letter-spacing:.04em; }
+  .full { grid-column:1 / -1; }
+  input,select,button,textarea { font:inherit; }
+  input[type=text]{ width:100%; padding:10px; border-radius:8px; border:1px solid var(--line); background:#0b1220; color:var(--txt); }
+  select { padding:8px; border-radius:8px; border:1px solid var(--line); background:#0b1220; color:var(--txt); }
+  button { background:var(--accent); color:#04211d; border:none; border-radius:8px; padding:10px 16px; font-weight:600; cursor:pointer; }
+  button.secondary { background:transparent; color:var(--txt); border:1px solid var(--line); }
+  .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .answer { background:#0b1220; border:1px solid var(--line); border-radius:8px; padding:14px; min-height:48px; white-space:pre-wrap; }
+  .cite { display:inline-block; font-size:11px; color:var(--muted); border:1px solid var(--line); border-radius:6px; padding:2px 6px; margin:4px 4px 0 0; }
+  .badge { font-size:11px; padding:2px 6px; border-radius:6px; background:#0b1220; border:1px solid var(--line); color:var(--muted); }
+  .img { color:#f59e0b; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  td,th { border-bottom:1px solid var(--line); padding:6px 8px; text-align:left; }
+  .metric { font-size:26px; font-weight:700; color:var(--accent); }
+  .metricGrid { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; }
+  .metricGrid .panel { text-align:center; padding:12px; }
+  .small { font-size:12px; color:var(--muted); }
+  #graph { height:360px; background:#0b1220; border-radius:8px; border:1px solid var(--line); }
+  canvas { max-height:300px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🔎 RAG Document Analyzer</h1>
+  <span class="pill" id="provider">provider: …</span>
+  <span class="pill" id="index">index: …</span>
+  <div class="row" style="margin-left:auto">
+    <label class="small">View as user:</label>
+    <select id="user">
+      <option value="guest">guest (public)</option>
+      <option value="analyst">analyst (public + finance)</option>
+      <option value="ceo">ceo (all roles)</option>
+    </select>
+    <button class="secondary" onclick="reingest()">Re-ingest</button>
+  </div>
+</header>
+
+<main>
+  <section class="panel full">
+    <h2>Ask the documents</h2>
+    <div class="row">
+      <input id="q" type="text" placeholder="e.g. What was Helios Energy's total revenue in 2025?" onkeydown="if(event.key==='Enter')ask()" />
+      <button onclick="ask()">Ask</button>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <span class="small">Try:</span>
+      <button class="secondary" onclick="setQ('What was Helios Energy\\'s total revenue in 2025?')">Helios revenue</button>
+      <button class="secondary" onclick="setQ('What was Orion Logistics net profit margin in 2025?')">Orion margin (finance)</button>
+      <button class="secondary" onclick="setQ('How much is Helios offering to acquire Nimbus for?')">M&amp;A (exec)</button>
+      <button class="secondary" onclick="setQ('What does the Helios revenue chart show by region?')">Chart (multimodal)</button>
+    </div>
+    <h2 style="margin-top:16px">Answer</h2>
+    <div class="answer" id="answer">—</div>
+    <div id="citations"></div>
+    <div id="retrieved" class="small" style="margin-top:10px"></div>
+  </section>
+
+  <section class="panel">
+    <h2>Revenue by region (extracted)</h2>
+    <canvas id="pie"></canvas>
+  </section>
+
+  <section class="panel">
+    <h2>Knowledge graph (company → region / product)</h2>
+    <div id="graph"></div>
+  </section>
+
+  <section class="panel full">
+    <h2>Evaluation <button class="secondary" style="float:right" onclick="runEval()">Run eval</button></h2>
+    <div class="metricGrid" id="metrics">
+      <div class="panel"><div class="metric" id="m_p">–</div><div class="small">Precision@k</div></div>
+      <div class="panel"><div class="metric" id="m_r">–</div><div class="small">Recall@k</div></div>
+      <div class="panel"><div class="metric" id="m_c">–</div><div class="small">Correctness</div></div>
+      <div class="panel"><div class="metric" id="m_f">–</div><div class="small">Faithfulness</div></div>
+      <div class="panel"><div class="metric" id="m_a">–</div><div class="small">ACL safety</div></div>
+    </div>
+    <div id="evalTable" style="margin-top:12px"></div>
+  </section>
+</main>
+
+<script>
+let pieChart, network;
+const $ = (id) => document.getElementById(id);
+const user = () => $("user").value;
+
+async function api(path, body) {
+  const r = await fetch(path, { method: body ? "POST" : "GET", headers: { "content-type": "application/json" }, body: body ? JSON.stringify(body) : undefined });
+  return r.json();
+}
+function setQ(s){ $("q").value = s; ask(); }
+
+async function boot() {
+  const h = await api("/api/health");
+  $("provider").textContent = "provider: " + h.provider;
+  $("index").textContent = "index: " + h.stats.totalChunks + " chunks";
+  await visualize();
+}
+$("user").addEventListener("change", visualize);
+
+async function ask() {
+  const query = $("q").value.trim(); if (!query) return;
+  $("answer").textContent = "…thinking";
+  $("citations").innerHTML = ""; $("retrieved").innerHTML = "";
+  const res = await api("/api/query", { query, user: user() });
+  $("answer").textContent = res.answer || "(no answer)";
+  $("citations").innerHTML = (res.citations||[]).map(c => `<span class="cite">📎 ${c.title} — ${c.id}</span>`).join("");
+  $("retrieved").innerHTML = "<b>Retrieved:</b> " + (res.retrieved||[]).map(r =>
+    `<span class="badge ${r.modality==='image'?'img':''}">${r.docId} #${r.id.split('#')[1]} · ${r.score}${r.modality==='image'?' 🖼':''}</span>`).join(" ");
+}
+
+async function visualize() {
+  const v = await api("/api/visualize", { user: user() });
+  // pie
+  const labels = v.revenueByRegion.map(x=>x.region), data = v.revenueByRegion.map(x=>x.revenueB);
+  if (pieChart) pieChart.destroy();
+  pieChart = new Chart($("pie"), { type:"pie",
+    data:{ labels, datasets:[{ data, backgroundColor:["#14b8a6","#3b82f6","#8b5cf6","#f59e0b","#ec4899","#22c55e"] }] },
+    options:{ plugins:{ legend:{ labels:{ color:"#e2e8f0" } } } } });
+  // graph
+  const colors = { company:"#14b8a6", region:"#3b82f6", product:"#8b5cf6" };
+  const nodes = v.graph.nodes.map(n=>({ id:n.id, label:n.id, color:colors[n.group]||"#64748b", shape:n.group==="company"?"box":"dot" }));
+  const edges = v.graph.edges.map(e=>({ from:e.source, to:e.target, label:e.label||"", font:{color:"#94a3b8",size:10}, color:"#475569" }));
+  network = new vis.Network($("graph"), { nodes:new vis.DataSet(nodes), edges:new vis.DataSet(edges) },
+    { nodes:{ font:{ color:"#e2e8f0" } }, physics:{ stabilization:true } });
+}
+
+async function reingest(){ await api("/api/ingest", { force:false }); boot(); }
+
+async function runEval() {
+  $("evalTable").innerHTML = "Running…";
+  const rep = await api("/api/eval");
+  const m = rep.metrics, p = x => (x*100).toFixed(0)+"%";
+  $("m_p").textContent=p(m.retrievalPrecisionAtK); $("m_r").textContent=p(m.retrievalRecallAtK);
+  $("m_c").textContent=p(m.answerCorrectness); $("m_f").textContent=p(m.faithfulness); $("m_a").textContent=p(m.aclSafetyRate);
+  $("evalTable").innerHTML = "<table><tr><th>Q</th><th>Question</th><th>P</th><th>R</th><th>Correct</th><th>Faithful</th></tr>" +
+    rep.perQuestion.map(q=>`<tr><td>${q.id}</td><td>${q.query}</td><td>${p(q.precision)}</td><td>${p(q.recall)}</td><td>${p(q.correctness)}</td><td>${p(q.faithfulness)}</td></tr>`).join("") +
+    "</table><p class='small'>ACL test (asked as guest): " +
+    rep.aclResults.map(a=>`${a.id}:${a.leaked?'❌ LEAK':'✅ blocked'}`).join(" · ") + "</p>";
+}
+boot();
+</script>
+</body>
+</html>

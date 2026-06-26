@@ -1,0 +1,6 @@
+Pie chart titled "Helios 2025 Revenue by Region ($B)".
+Europe is the largest slice at 1.9 billion dollars (45%).
+North America is 1.1 billion dollars (26%).
+Asia is 0.8 billion dollars (19%).
+Latin America is the smallest slice at 0.4 billion dollars (10%).
+The chart visualizes Helios Energy total 2025 revenue of 4.2 billion dollars split across four regions.
