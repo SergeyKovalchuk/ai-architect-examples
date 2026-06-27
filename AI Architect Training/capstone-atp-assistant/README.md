@@ -9,11 +9,11 @@ A chatbot that composes the two prior course projects — **RAG** + **Agent/MCP*
 
 **Stack:** All-TypeScript · Vercel AI SDK (agent) · `@modelcontextprotocol/sdk` (MCP) · Arquero (dataframe) · Vitest (tests) · Azure/DIAL + offline-mock providers · CLI + lightweight web.
 
-> **Status:** built incrementally. ✅ Part 1 (ATP data MCP + tests). ⏳ Parts 2–6 to come.
+> **Status:** built incrementally. ✅ Parts 1–2. ⏳ Parts 3–6 to come.
 
 ## Build plan
 1. ✅ **ATP data MCP server** (Arquero) + Vitest tests + sample CSV
-2. ⏳ Weather + News MCP servers
+2. ✅ **Weather + News MCP servers** (Open-Meteo + keyless news) + tests
 3. ⏳ RAG over supervisor-call case notes (+ tests)
 4. ⏳ Agent orchestrator (RAG + 3 MCP tools)
 5. ⏳ Chat frontend (CLI + web)
@@ -22,9 +22,16 @@ A chatbot that composes the two prior course projects — **RAG** + **Agent/MCP*
 ## Quick start
 ```bash
 npm install
-npm test            # Vitest — currently 12/12 passing (ATP data layer)
-npm run typecheck   # tsc --noEmit
+cp .env.example .env   # defaults: PROVIDER=mock, OFFLINE=1 → no keys/network needed
+npm test               # Vitest — currently 19/19 passing
+npm run typecheck      # tsc --noEmit
 ```
+
+## Configuration (`.env`)
+- `PROVIDER` = `mock` (offline router, no LLM) | `azure` | `dial`
+- `OFFLINE` = `1` (canned weather/news, no network) | `0` (live Open-Meteo + Google News)
+
+The MCP layer is real in every mode; `mock`+`OFFLINE=1` lets everything (and the tests) run with no keys and no internet.
 
 ## Part 1 — ATP data MCP server
 
@@ -57,4 +64,18 @@ curl -L -o ~/Downloads/atp-matches-dataset.zip \
 ```
 
 ### Tests
-`npm test` → **12 passing**, covering CSV load + year derivation, `query_matches` filters, `head_to_head` (incl. order-independence and date sorting), and `player_summary` aggregates. Test constants were pinned to values computed from the sample CSV, then hand-verified.
+`test/atp.test.ts` covers CSV load + year derivation, `query_matches` filters, `head_to_head` (incl. order-independence and date sorting), and `player_summary` aggregates. Test constants were pinned to values computed from the sample CSV, then hand-verified.
+
+## Part 2 — Weather + News MCP servers
+
+Two more keyless MCP servers, each with the tool logic in a pure, testable module:
+
+| Server | Tool | Source | Logic |
+|---|---|---|---|
+| `weather-mcp` | `get_weather` | Open-Meteo (geocode + current) | `src/weather.ts` |
+| `news-mcp` | `get_news` | Google News RSS | `src/news.ts` |
+
+Both honor `OFFLINE`: offline returns deterministic, clearly-labelled sample data (weather is synthesized for *any* city so demos answer the city asked); live hits the real APIs. News is swappable to GNews.io / NewsAPI by replacing one function.
+
+### Tests
+`test/tools.test.ts` covers offline weather (curated + synthesized cities, case-insensitivity, formatting, WMO mapping) and offline news (topic routing, limit, formatting). **Total suite: 19/19 passing.**

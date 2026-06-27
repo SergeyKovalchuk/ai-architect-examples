@@ -1,17 +1,21 @@
 {
   "name": "capstone-atp-assistant",
   "version": "1.0.0",
-  "description": "Capstone: ATP match-assistant chatbot — agent orchestrating RAG + MCP tools (ATP data via Arquero, weather, news).",
+  "description": "Capstone: ATP match-assistant chatbot \u2014 agent orchestrating RAG + MCP tools (ATP data via Arquero, weather, news).",
   "type": "module",
   "scripts": {
     "test": "vitest run",
     "atp-server": "tsx src/mcp/atp-server.ts",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "weather-server": "tsx src/mcp/weather-server.ts",
+    "news-server": "tsx src/mcp/news-server.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
     "arquero": "^8.0.0",
-    "zod": "^4.0.0"
+    "zod": "^4.0.0",
+    "dotenv": "^17.0.0",
+    "fast-xml-parser": "^5.0.0"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
