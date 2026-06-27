@@ -32,9 +32,22 @@ The LLM plans the calls (weather? news? both?) in a bounded multi-step loop
 ```bash
 npm install
 cp .env.example .env     # defaults: PROVIDER=mock, OFFLINE=1 → runs with NO keys, NO network
+
+# Option A — web UI (lightweight chat page)
+npm run serve            # → http://localhost:3000
+
+# Option B — CLI
 npm run ask -- "What's the weather in Tokyo and the latest technology news?"
+
+# Evaluation
 npm run eval
 ```
+
+### Web UI
+`npm run serve` starts a Fastify server that opens **one** MCP connection at boot
+(reused across requests) and serves a single-page chat UI (`public/index.html`) plus:
+- `GET /api/health` → provider, offline flag, and the live MCP tool names
+- `POST /api/ask {question}` → `{ answer, toolsUsed }`
 
 ### Run for real
 Edit `.env`:
@@ -45,7 +58,7 @@ AZURE_RESOURCE_NAME=...
 AZURE_API_KEY=...
 AZURE_CHAT_DEPLOYMENT=gpt-4o-mini
 ```
-Then `npm run ask -- "Is it raining in London?"`.
+Then `npm run serve` (or `npm run ask -- "Is it raining in London?"`).
 
 ## Two run modes (so it's always demonstrable)
 
@@ -85,6 +98,8 @@ src/mcp-client.ts           spawn + connect MCP clients, expose tools to the AI 
 src/agent.ts                orchestrator (LLM path + offline mock path)
 src/provider.ts             Azure / DIAL model + system prompt
 src/ask.ts                  CLI
+src/server.ts               Fastify web server (/api/ask) + static UI
+public/index.html           lightweight chat frontend
 src/eval.ts                 evaluation harness
 data/golden.json            evaluation dataset
 ```
@@ -95,3 +110,4 @@ data/golden.json            evaluation dataset
 - **Grounding:** answers come only from tool results; the agent declines out-of-scope asks.
 - **No vendor lock-in:** provider swap is one line; news source swap is one function.
 - **Always runnable:** offline + mock modes mean the grader can run it without any keys.
+- **Single shared MCP connection** in the web server (started once at boot, reused per request).

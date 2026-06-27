@@ -34,8 +34,15 @@ async function llmOrchestrate(question: string, handle: McpHandle): Promise<Agen
 }
 
 /* ── Mock orchestration: deterministic intent routing (offline, no key) ── */
-const CITIES = ["berlin", "london", "tokyo", "paris", "new york"];
-const TOPICS = ["technology", "sports", "tech", "ai", "business", "science"];
+const TOPICS = ["technology", "sports", "tech", "ai", "business", "science", "politics", "health"];
+
+// Pull the place name out of "...weather in <City>..." (keeps original casing).
+function extractCity(question: string): string {
+  const m = question.match(/\b(?:weather|temperature|forecast)\b[^.?!]*?\b(?:in|for|at)\s+([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?)/);
+  if (m) return m[1];
+  const any = question.match(/\b(?:in|for|at)\s+([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?)/);
+  return any ? any[1] : "Berlin";
+}
 
 async function mockOrchestrate(question: string, handle: McpHandle): Promise<AgentResult> {
   const q = question.toLowerCase();
@@ -53,8 +60,7 @@ async function mockOrchestrate(question: string, handle: McpHandle): Promise<Age
   const toolsUsed: string[] = [];
 
   if (wantsWeather) {
-    const city = CITIES.find((c) => q.includes(c)) ?? "berlin";
-    const r = await handle.callTool("get_weather", { location: city });
+    const r = await handle.callTool("get_weather", { location: extractCity(question) });
     parts.push(r.text);
     toolsUsed.push("get_weather");
   }

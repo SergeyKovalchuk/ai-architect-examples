@@ -35,9 +35,21 @@ async function liveWeather(location: string) {
 }
 
 function cannedWeather(location: string) {
-  const d = CANNED[location.trim().toLowerCase()];
-  if (!d) throw new Error(`No offline data for "${location}". Try Berlin, London, or Tokyo (or set OFFLINE=0).`);
-  return d;
+  const key = location.trim().toLowerCase();
+  if (CANNED[key]) return CANNED[key];
+  // For any other city, synthesize DETERMINISTIC (clearly-offline) values from
+  // a hash of the name, so offline demos still answer about the city asked.
+  let h = 0;
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+  const codes = [0, 1, 2, 3, 61, 71, 80];
+  const title = location.trim().replace(/\b\w/g, (c) => c.toUpperCase());
+  return {
+    name: title,
+    country: "(offline sample)",
+    temp: Number((-5 + (h % 350) / 10).toFixed(1)), // -5.0 .. 29.9 °C
+    code: codes[h % codes.length],
+    wind: Number((2 + (h % 200) / 10).toFixed(1)), // 2.0 .. 21.9 km/h
+  };
 }
 
 const server = new McpServer({ name: "weather-mcp", version: "1.0.0" });

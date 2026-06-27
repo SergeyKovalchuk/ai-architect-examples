@@ -8,7 +8,8 @@
     "eval": "tsx src/eval.ts",
     "weather-server": "tsx src/mcp/weather-server.ts",
     "news-server": "tsx src/mcp/news-server.ts",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "serve": "tsx src/server.ts"
   },
   "dependencies": {
     "@ai-sdk/azure": "^4.0.0",
@@ -17,7 +18,9 @@
     "ai": "^7.0.0",
     "dotenv": "^17.0.0",
     "fast-xml-parser": "^5.0.0",
-    "zod": "^4.0.0"
+    "zod": "^4.0.0",
+    "fastify": "^5.0.0",
+    "@fastify/static": "^8.0.0"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
