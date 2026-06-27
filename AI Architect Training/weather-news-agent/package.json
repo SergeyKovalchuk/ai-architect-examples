@@ -1,0 +1,27 @@
+{
+  "name": "weather-news-agent",
+  "version": "1.0.0",
+  "description": "Agentic AI (Module 3.5): an orchestrator agent that answers weather & news questions via two MCP servers (Open-Meteo + keyless news). Vercel AI SDK.",
+  "type": "module",
+  "scripts": {
+    "ask": "tsx src/ask.ts",
+    "eval": "tsx src/eval.ts",
+    "weather-server": "tsx src/mcp/weather-server.ts",
+    "news-server": "tsx src/mcp/news-server.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@ai-sdk/azure": "^4.0.0",
+    "@ai-sdk/openai-compatible": "^3.0.0",
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "ai": "^7.0.0",
+    "dotenv": "^17.0.0",
+    "fast-xml-parser": "^5.0.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}

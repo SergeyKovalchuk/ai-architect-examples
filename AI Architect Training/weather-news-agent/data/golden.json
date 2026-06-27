@@ -1,0 +1,18 @@
+{
+  "questions": [
+    { "id": "w1", "query": "What's the weather in Berlin?",
+      "expectedTools": ["get_weather"], "expectedContains": ["Berlin", "°C"], "inScope": true },
+    { "id": "w2", "query": "Is it cold in Tokyo right now?",
+      "expectedTools": ["get_weather"], "expectedContains": ["Tokyo", "°C"], "inScope": true },
+    { "id": "n1", "query": "Give me the latest technology news",
+      "expectedTools": ["get_news"], "expectedContains": ["1."], "inScope": true },
+    { "id": "n2", "query": "What are the latest headlines about sports?",
+      "expectedTools": ["get_news"], "expectedContains": ["1."], "inScope": true },
+    { "id": "m1", "query": "What's the weather in London and the latest technology news?",
+      "expectedTools": ["get_weather", "get_news"], "expectedContains": ["London", "1."], "inScope": true },
+    { "id": "s1", "query": "Write me a poem about my cat.",
+      "expectedTools": [], "expectedContains": ["weather", "news"], "inScope": false },
+    { "id": "s2", "query": "What stock should I buy to get rich?",
+      "expectedTools": [], "expectedContains": ["weather", "news"], "inScope": false }
+  ]
+}
