@@ -47,9 +47,9 @@ npm run serve   # http://localhost:3000
 | Module | Topic | Location |
 |--------|-------|----------|
 | 2.1 | Self-reflection / ReAct prompt (ATP tennis analysis) | [`HW_2.1_Self-Reflection_Prompt_Tennis_ATP.md`](AI%20Architect%20Training/HW_2.1_Self-Reflection_Prompt_Tennis_ATP.md) |
-| 3.x | RAG practical task | [`rag-app/SUBMISSION.md`](AI%20Architect%20Training/rag-app/SUBMISSION.md) |
-| 3.5 | Agentic AI (MCP) | [`weather-news-agent/SUBMISSION.md`](AI%20Architect%20Training/weather-news-agent/SUBMISSION.md) |
-| 4.1 | OWASP LLM security | [`HW_4.1_Security_OWASP/`](AI%20Architect%20Training/HW_4.1_Security_OWASP/) |
+| 3.1 | RAG practical task | [`rag-app`](AI%20Architect%20Training/rag-app) |
+| 3.5 | Agentic AI (MCP) | [`weather-news-agent`](AI%20Architect%20Training/weather-news-agent) |
+| 4.1 | OWASP LLM security | [`security-examples/`](AI%20Architect%20Training/security-examples) |
 
 ---
 
@@ -62,8 +62,7 @@ ai-architect-examples/
     ├── AI Architect Brain/     # Obsidian knowledge base (PRIVATE)
     ├── rag-app/                # RAG + eval harness (TypeScript)
     ├── weather-news-agent/     # MCP agent orchestrator (TypeScript)
-    ├── HW_4.1_Security_OWASP/  # Security homework
-    └── HW_2.1_*.md             # Prompt engineering homework
+    ├── security-examples/  # Security homework
 ```
 
 ---
