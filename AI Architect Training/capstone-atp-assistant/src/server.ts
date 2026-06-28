@@ -4,7 +4,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import Fastify from "fastify";
 import fstatic from "@fastify/static";
-import { config } from "./config.js";
+import cors from "@fastify/cors";
+import rateLimit from "@fastify/rate-limit";
+import { config, questionWithinLimit } from "./config.js";
 import { startMcp, type McpHandle } from "./mcp-client.js";
 import { ask } from "./agent.js";
 import { resolveUser, isAuthEnabled, ANONYMOUS } from "./auth.js";
@@ -12,7 +14,21 @@ import { resolveUser, isAuthEnabled, ANONYMOUS } from "./auth.js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const mcp: McpHandle = await startMcp();
 
-const app = Fastify({ logger: false });
+const app = Fastify({ logger: false, bodyLimit: config.limits.bodyLimitBytes });
+
+// CORS: empty allowlist = same-origin only (locked down); else allow listed origins.
+await app.register(cors, {
+  origin: config.limits.corsOrigins.length ? config.limits.corsOrigins : false,
+  methods: ["GET", "POST"],
+});
+
+// Rate limit per token-or-IP (LLM10 unbounded consumption / cost / DoS).
+await app.register(rateLimit, {
+  max: config.limits.ratePerMinute,
+  timeWindow: "1 minute",
+  keyGenerator: (req: any) => (req.headers?.authorization ?? req.ip),
+});
+
 await app.register(fstatic, { root: path.join(__dirname, "..", "public") });
 
 app.get("/api/health", async () => ({
@@ -29,7 +45,9 @@ app.post("/api/ask", async (req: any, reply) => {
     user = resolved;
   }
   const question = (req.body?.question ?? "").toString().trim();
-  if (!question) return reply.code(400).send({ error: "question required" });
+  if (!questionWithinLimit(question)) {
+    return reply.code(400).send({ error: `question must be 1-${config.limits.maxQuestionChars} characters` });
+  }
   const history = Array.isArray(req.body?.history) ? req.body.history : [];
   const res = await ask(question, mcp, history, user);
   return { question, user: { name: user.name, roles: user.roles }, ...res };

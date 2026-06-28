@@ -2,7 +2,7 @@
 //   - real (azure/dial): the LLM plans tool calls.
 //   - mock (offline):     a deterministic intent router (route) calls tools.
 import { generateText, stepCountIs } from "ai";
-import { isMock } from "./config.js";
+import { isMock, config } from "./config.js";
 import { chatModel, SYSTEM_PROMPT } from "./provider.js";
 import { startMcp, type McpHandle } from "./mcp-client.js";
 import { makeRagTool, ragAnswer } from "./rag-tool.js";
@@ -150,7 +150,8 @@ async function llmOrchestrate(question: string, mcp: McpHandle, history: ChatMes
     system: SYSTEM_PROMPT,
     messages,
     tools,
-    stopWhen: stepCountIs(6),
+    stopWhen: stepCountIs(config.limits.maxSteps), // bounded agent loop
+    maxOutputTokens: config.limits.maxOutputTokens, // cap output (cost/DoS)
   });
   const toolsUsed = [...new Set(result.steps.flatMap((s) => s.toolCalls.map((c) => c.toolName)))];
 
