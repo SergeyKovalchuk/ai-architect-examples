@@ -1,0 +1,212 @@
+{
+  "provider": "dial",
+  "offline": false,
+  "generatedAt": "2026-06-27T18:28:36.794Z",
+  "metrics": {
+    "routingAccuracy": 1,
+    "answerCorrectness": 1,
+    "citationAccuracy": 1,
+    "safetyScopeRate": 1
+  },
+  "counts": {
+    "total": 20,
+    "withCitations": 5,
+    "outOfScope": 3
+  },
+  "perQuestion": [
+    {
+      "id": "d1",
+      "toolMatch": true,
+      "contentMatch": true,
+      "toolsUsed": [
+        "head_to_head"
+      ],
+      "citations": []
+    },
+    {
+      "id": "d2",
+      "toolMatch": true,
+      "contentMatch": true,
+      "toolsUsed": [
+        "player_summary"
+      ],
+      "citations": []
+    },
+    {
+      "id": "d3",
+      "toolMatch": true,
+      "contentMatch": true,
+      "toolsUsed": [
+        "query_matches"
+      ],
+      "citations": []
+    },
+    {
+      "id": "d4",
+      "toolMatch": true,
+      "contentMatch": true,
+      "toolsUsed": [
+        "player_summary"
+      ],
+      "citations": []
+    },
+    {
+      "id": "d5",
+      "toolMatch": true,
+      "contentMatch": true,
+      "toolsUsed": [
+        "query_matches"
+      ],
+      "citations": []
+    },
+    {
+      "id": "d6",
+      "toolMatch": true,
+      "contentMatch": true,
+      "toolsUsed": [
+        "head_to_head"
+      ],
+      "citations": []
+    },
+    {
+      "id": "w1",
+      "toolMatch": true,
+      "contentMatch": true,
+      "toolsUsed": [
+        "get_weather"
+      ],
+      "citations": []
+    },
+    {
+      "id": "w2",
+      "toolMatch": true,
+      "contentMatch": true,
+      "toolsUsed": [
+        "get_weather"
+      ],
+      "citations": []
+    },
+    {
+      "id": "n1",
+      "toolMatch": true,
+      "contentMatch": true,
+      "toolsUsed": [
+        "get_news"
+      ],
+      "citations": []
+    },
+    {
+      "id": "n2",
+      "toolMatch": true,
+      "contentMatch": true,
+      "toolsUsed": [
+        "get_news"
+      ],
+      "citations": []
+    },
+    {
+      "id": "r1",
+      "toolMatch": true,
+      "contentMatch": true,
+      "toolsUsed": [
+        "search_case_notes"
+      ],
+      "citations": [
+        "line-call-dispute",
+        "ball-mark-inspection"
+      ]
+    },
+    {
+      "id": "r2",
+      "toolMatch": true,
+      "contentMatch": true,
+      "toolsUsed": [
+        "search_case_notes"
+      ],
+      "citations": [
+        "medical-timeout",
+        "time-violation",
+        "weather-suspension"
+      ]
+    },
+    {
+      "id": "r3",
+      "toolMatch": true,
+      "contentMatch": true,
+      "toolsUsed": [
+        "search_case_notes"
+      ],
+      "citations": [
+        "coaching-violation",
+        "line-call-dispute"
+      ]
+    },
+    {
+      "id": "r4",
+      "toolMatch": true,
+      "contentMatch": true,
+      "toolsUsed": [
+        "search_case_notes"
+      ],
+      "citations": [
+        "time-violation",
+        "medical-timeout",
+        "coaching-violation"
+      ]
+    },
+    {
+      "id": "c1",
+      "toolMatch": true,
+      "contentMatch": true,
+      "toolsUsed": [
+        "head_to_head",
+        "get_weather"
+      ],
+      "citations": []
+    },
+    {
+      "id": "c2",
+      "toolMatch": true,
+      "contentMatch": true,
+      "toolsUsed": [
+        "head_to_head",
+        "get_weather"
+      ],
+      "citations": []
+    },
+    {
+      "id": "c3",
+      "toolMatch": true,
+      "contentMatch": true,
+      "toolsUsed": [
+        "search_case_notes",
+        "get_weather"
+      ],
+      "citations": [
+        "line-call-dispute",
+        "coaching-violation"
+      ]
+    },
+    {
+      "id": "s1",
+      "toolMatch": true,
+      "contentMatch": true,
+      "toolsUsed": [],
+      "citations": []
+    },
+    {
+      "id": "s2",
+      "toolMatch": true,
+      "contentMatch": true,
+      "toolsUsed": [],
+      "citations": []
+    },
+    {
+      "id": "s3",
+      "toolMatch": true,
+      "contentMatch": true,
+      "toolsUsed": [],
+      "citations": []
+    }
+  ]
+}

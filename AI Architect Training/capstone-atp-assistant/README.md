@@ -1,81 +1,133 @@
-# Capstone — ATP Match Assistant
+# ATP Match Assistant
 
-A chatbot that composes the two prior course projects — **RAG** + **Agent/MCP** — and extends them with a **data-query MCP server** over an ATP matches CSV. An agent routes each question to the right source:
+A chatbot that composes a **RAG** knowledge base with an **agent + MCP tools**, extended with a **data-query MCP server** over an ATP matches CSV. You ask one question; an agent decides which source(s) to use and answers — with citations for rules questions.
 
-- **ATP data MCP** — match queries over a CSV via a dataframe engine (head-to-head, player summary, filtered match search)
-- **Weather MCP** — conditions at a match venue *(Part 2)*
-- **News MCP** — latest tennis news *(Part 2)*
-- **RAG** — grounded answers from a corpus of "problematic match / supervisor-call" case notes, queryable by players, with citations *(Part 3)*
+Sources the agent routes between:
 
-**Stack:** All-TypeScript · Vercel AI SDK (agent) · `@modelcontextprotocol/sdk` (MCP) · Arquero (dataframe) · Vitest (tests) · Azure/DIAL + offline-mock providers · CLI + lightweight web.
+- **ATP data** (MCP) — head-to-head, player records, and filtered match search over a CSV, via a dataframe engine.
+- **Weather** (MCP) — current conditions at a match venue (Open-Meteo, no key).
+- **News** (MCP) — latest tennis news (Google News RSS, no key).
+- **RAG** — grounded answers from a corpus of "problematic match / supervisor-call" case notes (line-call disputes, coaching violations, medical timeouts, code violations, when a supervisor is called), queryable by players, with citations.
 
-> **Status:** built incrementally. ✅ Parts 1–2. ⏳ Parts 3–6 to come.
-
-## Build plan
-1. ✅ **ATP data MCP server** (Arquero) + Vitest tests + sample CSV
-2. ✅ **Weather + News MCP servers** (Open-Meteo + keyless news) + tests
-3. ⏳ RAG over supervisor-call case notes (+ tests)
-4. ⏳ Agent orchestrator (RAG + 3 MCP tools)
-5. ⏳ Chat frontend (CLI + web)
-6. ⏳ Evaluation harness + SUBMISSION
+**Stack:** All-TypeScript · Vercel AI SDK (agent) · `@modelcontextprotocol/sdk` (3 stdio MCP servers + clients) · Arquero (dataframe) · Vitest (tests) · Fastify + single-page chat UI · Azure/DIAL + offline-mock providers.
 
 ## Quick start
+
 ```bash
 npm install
 cp .env.example .env   # defaults: PROVIDER=mock, OFFLINE=1 → no keys/network needed
-npm test               # Vitest — currently 19/19 passing
+npm test               # Vitest — 40 tests (forced to mock/offline, hermetic)
+npm run eval           # evaluation metrics
+npm run serve          # web chat UI → http://localhost:3000
+npm run ask -- "head-to-head Nadal vs Federer and weather in Paris"   # CLI
 npm run typecheck      # tsc --noEmit
 ```
 
 ## Configuration (`.env`)
-- `PROVIDER` = `mock` (offline router, no LLM) | `azure` | `dial`
+
+- `PROVIDER` = `mock` (deterministic intent router, no LLM) | `azure` | `dial`
 - `OFFLINE` = `1` (canned weather/news, no network) | `0` (live Open-Meteo + Google News)
 
-The MCP layer is real in every mode; `mock`+`OFFLINE=1` lets everything (and the tests) run with no keys and no internet.
+The MCP layer is real in every mode; `mock` + `OFFLINE=1` lets the whole app, tests, and eval run with no keys and no internet. With `azure`/`dial` the LLM does the tool orchestration and uses real embeddings.
 
-## Part 1 — ATP data MCP server
+**Conversation memory:** the web UI keeps per-session history and sends it with each turn, so follow-ups ("yes", "go on") keep context in the LLM path (`azure`/`dial`). To keep context size and cost bounded, the agent applies a **rolling window** server-side (`trimHistory`) — it keeps at most the last 12 turns *and* trims older ones once the history exceeds ~6,000 characters (~1.5k tokens), always retaining the most recent turns. (A future enhancement would be to summarize dropped turns instead of discarding them.) The offline `mock` router is stateless (routes on the current message only).
 
-### Layout
+### Run with EPAM DIAL
+
+Edit `.env`:
+
+```ini
+PROVIDER=dial
+OFFLINE=0
+
+DIAL_BASE_URL=https://ai-proxy.lab.epam.com
+DIAL_API_KEY=your-dial-api-key
+DIAL_API_VERSION=2024-02-15-preview
+DIAL_CHAT_MODEL=gpt-4o-mini
+DIAL_EMBED_MODEL=text-embedding-3-small-1
 ```
-data/atp_matches.csv     sample matches (replaceable with the real Kaggle file)
-src/datatable.ts         thin Arquero wrapper (MatchTable) — the ONLY file that imports Arquero
-src/atp.ts               pure query functions: queryMatches, headToHead, playerSummary
-src/mcp/atp-server.ts    MCP server exposing those as 3 tools (stdio)
-test/atp.test.ts         Vitest suite (12 tests)
-```
 
-### MCP tools
-| Tool | Purpose |
-|---|---|
-| `query_matches` | Filter by player / surface / year / tournament / round → count + sample |
-| `head_to_head` | Win-loss record between two players + their match list |
-| `player_summary` | W-L, win %, titles (final-round wins), per-surface breakdown |
+DIAL uses Azure-style deployment URLs (`/openai/deployments/{model}/chat/completions`), not plain `/v1/chat/completions`. The app builds that path automatically — keep `DIAL_BASE_URL` as the host root only.
 
-### Swapping the dataframe engine
-All Arquero calls live in `src/datatable.ts` behind the `MatchTable` interface. To switch to **Danfo.js** ("Pandas for JS") on a machine where it installs, reimplement just that file — `atp.ts`, the MCP server, and the tests are unchanged.
+List models available to your key: `https://ai-proxy.lab.epam.com/openai/models` (EPAM VPN may be required).
 
-> Danfo.js was the originally chosen engine, but it can't be installed in the build sandbox (its `xlsx`/TensorFlow dependencies are blocked), so Arquero is used here to keep the mandatory tests verifiable. The wrapper keeps Danfo.js a drop-in option.
+Then restart the server and try:
 
-### Using the real Kaggle dataset
-The shipped CSV is a small curated sample so tests have known values. To use real data, download the ATP matches dataset and replace `data/atp_matches.csv` (keep the columns `tourney_name, surface, tourney_date, round, winner_name, loser_name, score`):
 ```bash
-curl -L -o ~/Downloads/atp-matches-dataset.zip \
-  https://www.kaggle.com/api/v1/datasets/download/gmadevs/atp-matches-dataset
+npm run ask -- "head-to-head Nadal vs Federer"
 ```
 
-### Tests
-`test/atp.test.ts` covers CSV load + year derivation, `query_matches` filters, `head_to_head` (incl. order-independence and date sorting), and `player_summary` aggregates. Test constants were pinned to values computed from the sample CSV, then hand-verified.
+## Architecture
 
-## Part 2 — Weather + News MCP servers
+C4 **Container view** (the player, the app containers, the MCP servers, and external systems/data):
 
-Two more keyless MCP servers, each with the tool logic in a pure, testable module:
+![ATP Match Assistant — C4 Container view](docs/architecture.svg)
 
-| Server | Tool | Source | Logic |
-|---|---|---|---|
-| `weather-mcp` | `get_weather` | Open-Meteo (geocode + current) | `src/weather.ts` |
-| `news-mcp` | `get_news` | Google News RSS | `src/news.ts` |
+> Full **C4 set** (Context → Container → Component), a runtime sequence, and a provider/mode view are in **[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)** (Mermaid). The image above is **[`docs/architecture.svg`](docs/architecture.svg)**.
 
-Both honor `OFFLINE`: offline returns deterministic, clearly-labelled sample data (weather is synthesized for *any* city so demos answer the city asked); live hits the real APIs. News is swappable to GNews.io / NewsAPI by replacing one function.
+## Layout
 
-### Tests
-`test/tools.test.ts` covers offline weather (curated + synthesized cities, case-insensitivity, formatting, WMO mapping) and offline news (topic routing, limit, formatting). **Total suite: 19/19 passing.**
+```
+data/
+  atp_matches.csv        sample matches (replaceable with the real Kaggle file)
+  cases/*.md             8 "supervisor-call" case notes (frontmatter: id, title, tags)
+  golden.json            evaluation dataset
+src/
+  datatable.ts           thin Arquero wrapper (MatchTable) — the ONLY file importing Arquero
+  atp.ts                 ATP query functions: queryMatches, headToHead, playerSummary
+  embeddings.ts          hashing embeddings (offline) | Azure/DIAL (live) + cosine
+  rag.ts                 corpus load → chunk → index → retrieve / ragContext
+  weather.ts, news.ts    pure tool logic (offline + live)
+  rag-tool.ts            RAG as an in-process AI SDK tool + offline helper
+  mcp/                   atp-server.ts, weather-server.ts, news-server.ts (stdio MCP servers)
+  mcp-client.ts          spawn + connect the 3 MCP servers, expose tools to the agent
+  provider.ts            Azure/DIAL chat model + system prompt
+  agent.ts               intent router (mock) + LLM orchestration (real) → ask()
+  cli.ts, server.ts      CLI and Fastify web server
+  eval.ts                evaluation harness
+public/index.html        single-page chat UI
+test/                    atp / tools / rag / agent suites (Vitest)
+```
+
+## MCP tools
+
+| Server | Tool | Purpose |
+|---|---|---|
+| atp-data | `query_matches` | Filter by player / surface / year / tournament / round |
+| atp-data | `head_to_head` | Win-loss record between two players + match list |
+| atp-data | `player_summary` | W-L, win %, titles, per-surface breakdown |
+| weather | `get_weather` | Current weather for a city / venue |
+| news | `get_news` | Latest news headlines for a topic |
+| (in-process) | `search_case_notes` | RAG over the supervisor-call case notes (cited) |
+
+## Testing
+
+`npm test` → **40 tests** (the script forces `PROVIDER=mock OFFLINE=1`, so tests are hermetic and never hit a live model):
+
+- `atp.test.ts` — CSV load, `query_matches`, `head_to_head` (incl. current-era Bublik vs Rublev), `player_summary` (constants pinned to values computed from the sample CSV).
+- `tools.test.ts` — offline weather + news logic.
+- `rag.test.ts` — corpus load, top-1 retrieval accuracy, citation alignment.
+- `agent.test.ts` — intent routing per source, combined questions, surface-vs-rules disambiguation, out-of-scope decline.
+
+## Evaluation
+
+`npm run eval` runs a 20-question golden set end-to-end through the agent and writes `data/eval-report.json`. The set covers each source (head-to-head, player summary, match search, weather, news, rules), multi-tool combinations, citation cases, and out-of-scope refusals.
+
+| Metric | What it checks |
+|---|---|
+| Routing / tool-selection | did the agent call exactly the right tool(s)? |
+| Answer correctness | expected facts present in the answer |
+| Citation accuracy | RAG answers cite the correct case note |
+| Safety (scope) rate | out-of-scope questions declined with no tool calls |
+
+Demonstrated run (mock + offline): **Routing 100% · Answer correctness 100% · Citation accuracy 100% · Safety 100%**.
+
+## Notes
+
+- **Dataframe engine:** all Arquero calls live in `src/datatable.ts` behind the `MatchTable` interface. Danfo.js ("Pandas for JS") couldn't be installed in the build environment (its `xlsx`/TensorFlow dependencies were blocked) and test coverage was required, so Arquero is used — reimplementing just that one file swaps the engine.
+- **Real dataset:** the shipped `data/atp_matches.csv` is a small curated sample so tests have known values. Replace it with the real Kaggle ATP matches dataset (same columns: `tourney_name, surface, tourney_date, round, winner_name, loser_name, score`):
+  ```bash
+  curl -L -o ~/Downloads/atp-matches-dataset.zip \
+    https://www.kaggle.com/api/v1/datasets/download/gmadevs/atp-matches-dataset
+  ```
+- **Case notes:** the 8 notes in `data/cases/` are a realistic sample corpus; drop in your own incident files and re-run.
