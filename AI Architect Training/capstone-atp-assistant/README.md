@@ -57,6 +57,19 @@ Then restart the server and try:
 npm run ask -- "head-to-head Nadal vs Federer"
 ```
 
+## Authentication & access control
+
+`POST /api/ask` requires a **Bearer token** (auth is on by default; set `AUTH_DISABLED=1` to turn off for local dev). The token resolves to a user with **roles**, and the RAG retriever is **ACL-aware**: a case note is only retrievable if its `roles:` frontmatter intersects the user's roles (default `public`). Access control happens *before* scoring, so restricted notes never reach the model for unauthorized users.
+
+Dev tokens (override via `AUTH_TOKENS` JSON in production): `player-token` (public), `official-token` (public + official), `admin-token` (all). The web UI has a "sign in as" selector; the CLI/eval run as a public/eval user.
+
+Example — the same question, different role:
+
+```
+player-token   → cites public note  "supervisor-call"
+official-token → cites restricted   "confidential-disciplinary"   (officials only)
+```
+
 ## Architecture
 
 C4 **Container view** (the player, the app containers, the MCP servers, and external systems/data):
