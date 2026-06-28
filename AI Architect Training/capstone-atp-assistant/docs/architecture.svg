@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1300 770" font-family="system-ui,Segoe UI,Arial,sans-serif">
+  <defs>
+    <marker id="ah" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#64748b"/></marker>
+    <style>
+      .lbl{fill:#0f172a;font-weight:700}
+      .sub{fill:#475569;font-size:10.5px}
+      .tech{fill:#64748b;font-size:10px;font-style:italic}
+      .rel{fill:#475569;font-size:10px}
+      .edge{stroke:#94a3b8;stroke-width:1.5;fill:none;marker-end:url(#ah)}
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1300" height="770" fill="#f8fafc"/>
+  <text x="24" y="30" font-size="18" class="lbl">ATP Match Assistant — C4 Container View</text>
+  <text x="24" y="49" class="sub">All-TypeScript · Vercel AI SDK · MCP (stdio) · Arquero · Fastify · Azure/DIAL + offline-mock</text>
+
+  <!-- Person -->
+  <rect x="70" y="62" width="230" height="54" rx="10" fill="#1e293b"/>
+  <text x="185" y="86" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">Player / Coach</text>
+  <text x="185" y="103" text-anchor="middle" fill="#cbd5e1" font-size="10">[person]</text>
+
+  <!-- System boundary (application containers) -->
+  <rect x="40" y="132" width="700" height="612" rx="14" fill="none" stroke="#3b82f6" stroke-dasharray="6 5"/>
+  <text x="56" y="153" fill="#2563eb" font-size="12" font-weight="700">System boundary — ATP Match Assistant</text>
+
+  <!-- Web UI -->
+  <rect x="70" y="170" width="230" height="66" rx="10" fill="#dbeafe" stroke="#3b82f6"/>
+  <text x="185" y="196" text-anchor="middle" class="lbl" font-size="13">Web UI</text>
+  <text x="185" y="213" text-anchor="middle" class="tech">HTML + vanilla JS</text>
+  <text x="185" y="228" text-anchor="middle" class="sub">chat page · session history</text>
+
+  <!-- API + Agent -->
+  <rect x="70" y="284" width="230" height="120" rx="10" fill="#bfdbfe" stroke="#2563eb"/>
+  <text x="185" y="310" text-anchor="middle" class="lbl" font-size="13">API + Agent</text>
+  <text x="185" y="327" text-anchor="middle" class="tech">Node · Fastify · Vercel AI SDK</text>
+  <text x="185" y="345" text-anchor="middle" class="sub">/api/ask · routes to tools</text>
+  <text x="185" y="361" text-anchor="middle" class="sub">rolling-window memory</text>
+  <text x="185" y="379" text-anchor="middle" class="sub" font-style="italic">includes in-process RAG</text>
+
+  <!-- MCP servers (separate processes) -->
+  <rect x="410" y="442" width="300" height="84" rx="10" fill="#e0f2fe" stroke="#0ea5e9"/>
+  <text x="560" y="468" text-anchor="middle" class="lbl" font-size="12.5">ATP Data MCP Server</text>
+  <text x="560" y="484" text-anchor="middle" class="tech">MCP stdio · Arquero</text>
+  <text x="560" y="503" text-anchor="middle" class="sub">query_matches · head_to_head · player_summary</text>
+
+  <rect x="410" y="560" width="300" height="80" rx="10" fill="#e0f2fe" stroke="#0ea5e9"/>
+  <text x="560" y="588" text-anchor="middle" class="lbl" font-size="12.5">Weather MCP Server</text>
+  <text x="560" y="605" text-anchor="middle" class="tech">MCP stdio</text>
+  <text x="560" y="623" text-anchor="middle" class="sub">get_weather</text>
+
+  <rect x="410" y="668" width="300" height="62" rx="10" fill="#e0f2fe" stroke="#0ea5e9"/>
+  <text x="560" y="693" text-anchor="middle" class="lbl" font-size="12.5">News MCP Server</text>
+  <text x="560" y="710" text-anchor="middle" class="sub">get_news · MCP stdio</text>
+
+  <!-- External / data column -->
+  <text x="950" y="153" fill="#475569" font-size="12" font-weight="700">External systems &amp; data</text>
+
+  <rect x="800" y="170" width="300" height="56" rx="10" fill="#fef9c3" stroke="#eab308"/>
+  <text x="950" y="194" text-anchor="middle" class="lbl" font-size="12">embedding index</text>
+  <text x="950" y="212" text-anchor="middle" class="sub">in-memory vectors [data]</text>
+
+  <rect x="800" y="246" width="300" height="58" rx="10" fill="#fef9c3" stroke="#eab308"/>
+  <text x="950" y="270" text-anchor="middle" class="lbl" font-size="12">case notes (.md)</text>
+  <text x="950" y="288" text-anchor="middle" class="sub">supervisor-call precedents [data]</text>
+
+  <rect x="800" y="322" width="320" height="80" rx="10" fill="#ede9fe" stroke="#8b5cf6"/>
+  <text x="960" y="350" text-anchor="middle" class="lbl" font-size="13">Azure OpenAI / EPAM DIAL</text>
+  <text x="960" y="368" text-anchor="middle" class="tech">[external]</text>
+  <text x="960" y="386" text-anchor="middle" class="sub">LLM (orchestration) + embeddings</text>
+
+  <rect x="800" y="442" width="300" height="84" rx="10" fill="#fef9c3" stroke="#eab308"/>
+  <text x="950" y="470" text-anchor="middle" class="lbl" font-size="12.5">atp_matches.csv</text>
+  <text x="950" y="488" text-anchor="middle" class="tech">CSV file [data]</text>
+  <text x="950" y="506" text-anchor="middle" class="sub">match results (sample / Kaggle)</text>
+
+  <rect x="800" y="560" width="300" height="80" rx="10" fill="#ede9fe" stroke="#8b5cf6"/>
+  <text x="950" y="588" text-anchor="middle" class="lbl" font-size="13">Open-Meteo API</text>
+  <text x="950" y="606" text-anchor="middle" class="tech">[external]</text>
+  <text x="950" y="624" text-anchor="middle" class="sub">geocode + current weather (no key)</text>
+
+  <rect x="800" y="668" width="300" height="62" rx="10" fill="#ede9fe" stroke="#8b5cf6"/>
+  <text x="950" y="693" text-anchor="middle" class="lbl" font-size="13">Google News RSS</text>
+  <text x="950" y="711" text-anchor="middle" class="sub">tennis headlines (no key) [external]</text>
+
+  <!-- ===== Orthogonal edges (H/V only, no box crossings) ===== -->
+  <!-- Player -> Web UI -->
+  <path class="edge" d="M185,116 L185,170"/>
+  <text x="193" y="146" class="rel">HTTPS</text>
+  <!-- Web UI -> API -->
+  <path class="edge" d="M185,236 L185,284"/>
+  <text x="193" y="263" class="rel">POST /api/ask</text>
+
+  <!-- API -> bus at x360 -->
+  <path class="edge" d="M300,344 L360,344" />
+  <!-- vertical bus -->
+  <path class="edge" d="M360,344 L360,197" />
+  <path class="edge" d="M360,344 L360,697" />
+
+  <!-- bus -> embedding index (y197) -->
+  <path class="edge" d="M360,197 L800,197"/>
+  <text x="430" y="190" class="rel">build / search index</text>
+  <!-- bus -> case notes (y275) -->
+  <path class="edge" d="M360,275 L800,275"/>
+  <text x="430" y="268" class="rel">read + embed</text>
+  <!-- bus -> Azure (y362) -->
+  <path class="edge" d="M360,362 L800,362"/>
+  <text x="430" y="355" class="rel">chat + embeddings · HTTPS</text>
+  <!-- bus -> ATP MCP (y484) -->
+  <path class="edge" d="M360,484 L410,484"/>
+  <text x="300" y="478" class="rel">stdio / MCP</text>
+  <!-- bus -> Weather MCP (y600) -->
+  <path class="edge" d="M360,600 L410,600"/>
+  <!-- bus -> News MCP (y697) -->
+  <path class="edge" d="M360,697 L410,697"/>
+
+  <!-- ATP MCP -> csv -->
+  <path class="edge" d="M710,484 L800,484"/>
+  <text x="724" y="478" class="rel">reads</text>
+  <!-- Weather MCP -> Open-Meteo -->
+  <path class="edge" d="M710,600 L800,600"/>
+  <text x="724" y="594" class="rel">HTTPS</text>
+  <!-- News MCP -> Google News -->
+  <path class="edge" d="M710,697 L800,697"/>
+  <text x="724" y="691" class="rel">RSS</text>
+
+  <!-- Legend -->
+  <rect x="40" y="58" width="0" height="0"/>
+  <g transform="translate(980,58)">
+    <rect x="0" y="0" width="14" height="12" rx="2" fill="#bfdbfe" stroke="#2563eb"/><text x="20" y="10" class="sub">app container</text>
+    <rect x="120" y="0" width="14" height="12" rx="2" fill="#e0f2fe" stroke="#0ea5e9"/><text x="140" y="10" class="sub">MCP server (process)</text>
+    <rect x="0" y="20" width="14" height="12" rx="2" fill="#fef9c3" stroke="#eab308"/><text x="20" y="30" class="sub">data store</text>
+    <rect x="120" y="20" width="14" height="12" rx="2" fill="#ede9fe" stroke="#8b5cf6"/><text x="140" y="30" class="sub">external system</text>
+  </g>
+
+  <text x="40" y="762" class="sub">Offline/mock mode swaps the external systems (Azure/DIAL, Open-Meteo, Google News) for deterministic local logic. Full C4 set + sequence: docs/ARCHITECTURE.md</text>
+</svg>
