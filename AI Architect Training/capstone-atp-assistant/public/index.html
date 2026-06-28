@@ -36,6 +36,13 @@
   <h1>🎾 ATP Match Assistant</h1>
   <span class="pill" id="status">connecting…</span>
   <span class="pill" id="tools"></span>
+  <label class="pill" style="margin-left:auto">sign in as
+    <select id="role" style="background:transparent;color:inherit;border:none;font:inherit">
+      <option value="player-token">player (public)</option>
+      <option value="official-token">official</option>
+      <option value="admin-token">admin</option>
+    </select>
+  </label>
 </header>
 
 <main id="log">
@@ -60,7 +67,11 @@
 <script>
 const $ = (id) => document.getElementById(id);
 async function api(path, body) {
-  const r = await fetch(path, { method: body ? "POST" : "GET", headers: { "content-type": "application/json" }, body: body ? JSON.stringify(body) : undefined });
+  const headers = { "content-type": "application/json" };
+  const token = $("role")?.value;
+  if (token) headers["authorization"] = "Bearer " + token;
+  const r = await fetch(path, { method: body ? "POST" : "GET", headers, body: body ? JSON.stringify(body) : undefined });
+  if (r.status === 401) return { answer: "Unauthorized — pick a valid role.", toolsUsed: [], citations: [] };
   return r.json();
 }
 async function boot() {
