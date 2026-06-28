@@ -8,7 +8,7 @@ beforeAll(() => loadTable());
 describe("MatchTable / CSV loading", () => {
   it("loads all rows and derives a year column", () => {
     const t = loadTable();
-    expect(t.rowCount).toBe(35);
+    expect(t.rowCount).toBe(47);
     const sample = t.rows()[0];
     expect(sample.year).toBe(2008); // tourney_date 20080608 -> 2008
     expect(sample.winner_name).toBe("Rafael Nadal");
@@ -61,6 +61,13 @@ describe("headToHead", () => {
     expect(r.p2Wins).toBe(2);
   });
 
+  it("resolves current-era players: Bublik vs Rublev = 1-2 (3 matches)", () => {
+    const r = headToHead("Alexander Bublik", "Andrey Rublev");
+    expect(r.total).toBe(3);
+    expect(r.p1Wins).toBe(1);
+    expect(r.p2Wins).toBe(2);
+  });
+
   it("returns matches sorted by date ascending", () => {
     const r = headToHead("Rafael Nadal", "Roger Federer");
     const dates = r.matches.map((m) => m.date);
@@ -86,6 +93,13 @@ describe("playerSummary", () => {
     const a = playerSummary("rafael nadal");
     const b = playerSummary("Rafael Nadal");
     expect(a.total).toBe(b.total);
+  });
+
+  it("summarizes a current-era player (Andrey Rublev)", () => {
+    const r = playerSummary("Andrey Rublev");
+    expect(r.wins).toBe(4);
+    expect(r.losses).toBe(2);
+    expect(r.titles).toBe(2); // final-round WINS: Monte Carlo + Madrid (Vienna final was a loss)
   });
 });
 
