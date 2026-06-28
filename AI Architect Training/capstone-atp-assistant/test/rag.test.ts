@@ -1,15 +1,39 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { loadCorpus, buildIndex, retrieve, ragContext, resetIndex } from "../src/rag.js";
+import { ragAnswer } from "../src/rag-tool.js";
 
 beforeAll(async () => { resetIndex(); await buildIndex(); });
 
 describe("corpus loading", () => {
-  it("loads all case notes with frontmatter", () => {
+  it("loads all case notes with frontmatter + roles", () => {
     const docs = loadCorpus();
-    expect(docs.length).toBe(8);
+    expect(docs.length).toBe(9);
     const byId = Object.fromEntries(docs.map((d) => [d.caseId, d]));
     expect(byId["line-call-dispute"].title).toContain("line call");
     expect(byId["medical-timeout"].tags).toContain("MTO");
+    expect(byId["line-call-dispute"].roles).toEqual(["public"]);            // default
+    expect(byId["confidential-disciplinary"].roles).toEqual(["official", "admin"]); // restricted
+  });
+});
+
+describe("ACL-aware retrieval (auth + roles)", () => {
+  const q = "confidential disciplinary sanction default fine after abusing the umpire";
+
+  it("hides the restricted note from a public user", async () => {
+    const hits = await retrieve(q, 9, ["public"]);
+    expect(hits.map((h) => h.caseId)).not.toContain("confidential-disciplinary");
+  });
+
+  it("returns the restricted note to an official", async () => {
+    const hits = await retrieve(q, 9, ["official"]);
+    expect(hits.map((h) => h.caseId)).toContain("confidential-disciplinary");
+  });
+
+  it("ragAnswer respects roles (public cannot read the restricted precedent)", async () => {
+    const pub = await ragAnswer(q, ["public"]);
+    expect(pub.citations).not.toContain("confidential-disciplinary");
+    const off = await ragAnswer(q, ["official"]);
+    expect(off.citations).toContain("confidential-disciplinary");
   });
 });
 
