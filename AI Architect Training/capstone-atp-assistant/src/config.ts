@@ -15,6 +15,7 @@ export const config = {
   dial: {
     baseURL: process.env.DIAL_BASE_URL ?? "",
     apiKey: process.env.DIAL_API_KEY ?? "",
+    apiVersion: process.env.DIAL_API_VERSION ?? "2024-02-15-preview",
     chat: process.env.DIAL_CHAT_MODEL ?? "gpt-4o-mini",
     embed: process.env.DIAL_EMBED_MODEL ?? "text-embedding-3-small-1",
   },

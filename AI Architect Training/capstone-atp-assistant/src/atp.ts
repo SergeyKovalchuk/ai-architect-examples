@@ -16,6 +16,13 @@ export function setTable(t: MatchTable) {
   _table = t;
 }
 
+/** Distinct player names appearing in the dataset (winners ∪ losers). */
+export function knownPlayers(): string[] {
+  const set = new Set<string>();
+  for (const m of loadTable().rows()) { set.add(m.winner_name); set.add(m.loser_name); }
+  return [...set];
+}
+
 function brief(m: MatchRow) {
   return { date: m.tourney_date, tourney: m.tourney_name, surface: m.surface, round: m.round, winner: m.winner_name, loser: m.loser_name, score: m.score };
 }
