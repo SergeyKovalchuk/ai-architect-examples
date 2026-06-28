@@ -74,6 +74,13 @@ official-token → cites restricted   "confidential-disciplinary"   (officials o
 
 In the live (Azure/DIAL) path the agent returns a **typed object** — `{ answer, citations, refused }` — via the AI SDK's structured-output mode (`Output.object` + a Zod schema), instead of free text that has to be parsed. Citations are then **enforced**: only case ids that `search_case_notes` actually returned this turn are allowed, so the model cannot fabricate a source. If the model cites nothing but case notes were retrieved, the real sources are added; fabricated ids are dropped (`enforceCitations`, unit-tested). `refused=true` flags out-of-scope questions.
 
+## Guardrails, audit logging & observability
+
+- **Input guardrail** (`src/guardrails.ts`) — blocks obvious prompt-injection / jailbreak attempts before any tool/model work (defense-in-depth on top of the untrusted-data delimiting).
+- **Output guardrail** — redacts secrets (API keys, bearer tokens) and PII (emails, phones, cards) from answers before they leave the system, *without* clobbering tennis scores.
+- **Audit log** (`src/audit.ts`) — one structured JSON line per `/api/ask` with user, roles, **question hash + length (never the raw text)**, tools used, citations, `refused`/`blocked`/`outputRedacted`, latency, provider; errors are redacted. Ship stdout to Loki/Datadog/Elastic.
+- **Observability hook** — `setObservabilitySink()` + `OBSERVABILITY=1` forwards records to a wired sink (e.g. **Langfuse / OpenTelemetry**); off by default. The interface lets managed guardrails (Azure AI Content Safety, Lakera) and tracing drop in later without touching the agent.
+
 ## Abuse & cost controls (LLM10)
 
 `/api/ask` is protected by several bounded limits (all configurable in `.env`):
