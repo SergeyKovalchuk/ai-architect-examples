@@ -10,6 +10,7 @@ import { config, questionWithinLimit } from "./config.js";
 import { startMcp, type McpHandle } from "./mcp-client.js";
 import { ask } from "./agent.js";
 import { resolveUser, isAuthEnabled, ANONYMOUS } from "./auth.js";
+import { buildAuditRecord, audit } from "./audit.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const mcp: McpHandle = await startMcp();
@@ -49,7 +50,23 @@ app.post("/api/ask", async (req: any, reply) => {
     return reply.code(400).send({ error: `question must be 1-${config.limits.maxQuestionChars} characters` });
   }
   const history = Array.isArray(req.body?.history) ? req.body.history : [];
-  const res = await ask(question, mcp, history, user);
+
+  // Run the agent, then emit one audit record (question reduced to length+hash).
+  const started = Date.now();
+  let res, error: string | undefined;
+  try {
+    res = await ask(question, mcp, history, user);
+  } catch (e: any) {
+    error = String(e?.message ?? e);
+  }
+  audit(buildAuditRecord({
+    question, user: user.name, roles: user.roles,
+    toolsUsed: res?.toolsUsed ?? [], citations: res?.citations ?? [],
+    refused: res?.refused ?? false, blocked: res?.blocked ?? false, outputRedacted: res?.outputRedacted ?? false,
+    latencyMs: Date.now() - started, provider: config.provider, error,
+  }));
+
+  if (error || !res) return reply.code(500).send({ error: "internal error" });
   return { question, user: { name: user.name, roles: user.roles }, ...res };
 });
 

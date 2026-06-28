@@ -9,8 +9,13 @@ import { startMcp, type McpHandle } from "./mcp-client.js";
 import { makeRagTool, ragAnswer } from "./rag-tool.js";
 import { knownPlayers } from "./atp.js";
 import { ANONYMOUS, type User } from "./auth.js";
+import { checkInput, guardOutput } from "./guardrails.js";
 
-export interface AgentResult { answer: string; toolsUsed: string[]; citations: string[]; refused: boolean; }
+export interface AgentResult {
+  answer: string; toolsUsed: string[]; citations: string[]; refused: boolean;
+  blocked?: boolean;        // input guardrail tripped
+  outputRedacted?: boolean; // output guardrail scrubbed secrets/PII
+}
 
 // Structured final answer: the model must return this shape (not free text).
 const answerSchema = z.object({
@@ -117,9 +122,17 @@ export function trimHistory(history: ChatMessage[]): ChatMessage[] {
 }
 
 export async function ask(question: string, mcp?: McpHandle, history: ChatMessage[] = [], user: User = ANONYMOUS): Promise<AgentResult> {
+  // INPUT guardrail (defense-in-depth on top of untrusted-data delimiting).
+  const input = checkInput(question);
+  if (!input.allowed) {
+    return { answer: "I can't help with that request.", toolsUsed: [], citations: [], refused: true, blocked: true, outputRedacted: false };
+  }
   const handle = mcp ?? (await startMcp());
   try {
-    return isMock ? await mockExecute(question, handle, user) : await llmOrchestrate(question, handle, history, user);
+    const res = isMock ? await mockExecute(question, handle, user) : await llmOrchestrate(question, handle, history, user);
+    // OUTPUT guardrail: redact any secrets/PII before the answer leaves the system.
+    const g = guardOutput(res.answer);
+    return { ...res, answer: g.answer, blocked: false, outputRedacted: g.redacted };
   } finally {
     if (!mcp) await handle.close();
   }
