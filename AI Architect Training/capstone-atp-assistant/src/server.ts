@@ -7,6 +7,7 @@ import fstatic from "@fastify/static";
 import { config } from "./config.js";
 import { startMcp, type McpHandle } from "./mcp-client.js";
 import { ask } from "./agent.js";
+import { resolveUser, isAuthEnabled, ANONYMOUS } from "./auth.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const mcp: McpHandle = await startMcp();
@@ -20,11 +21,18 @@ app.get("/api/health", async () => ({
 }));
 
 app.post("/api/ask", async (req: any, reply) => {
+  // AuthN: resolve the user from the bearer token (ACL-aware retrieval depends on roles).
+  let user = ANONYMOUS;
+  if (isAuthEnabled()) {
+    const resolved = resolveUser(req.headers?.authorization);
+    if (!resolved) return reply.code(401).send({ error: "unauthorized: provide a valid Bearer token" });
+    user = resolved;
+  }
   const question = (req.body?.question ?? "").toString().trim();
   if (!question) return reply.code(400).send({ error: "question required" });
   const history = Array.isArray(req.body?.history) ? req.body.history : [];
-  const res = await ask(question, mcp, history);
-  return { question, ...res };
+  const res = await ask(question, mcp, history, user);
+  return { question, user: { name: user.name, roles: user.roles }, ...res };
 });
 
 const port = Number(process.env.PORT ?? 3000);

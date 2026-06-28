@@ -5,8 +5,9 @@ import { generateText, stepCountIs } from "ai";
 import { isMock } from "./config.js";
 import { chatModel, SYSTEM_PROMPT } from "./provider.js";
 import { startMcp, type McpHandle } from "./mcp-client.js";
-import { ragTool, ragAnswer } from "./rag-tool.js";
+import { makeRagTool, ragAnswer } from "./rag-tool.js";
 import { knownPlayers } from "./atp.js";
+import { ANONYMOUS, type User } from "./auth.js";
 
 export interface AgentResult { answer: string; toolsUsed: string[]; citations: string[]; }
 
@@ -99,16 +100,16 @@ export function trimHistory(history: ChatMessage[]): ChatMessage[] {
   return kept;
 }
 
-export async function ask(question: string, mcp?: McpHandle, history: ChatMessage[] = []): Promise<AgentResult> {
+export async function ask(question: string, mcp?: McpHandle, history: ChatMessage[] = [], user: User = ANONYMOUS): Promise<AgentResult> {
   const handle = mcp ?? (await startMcp());
   try {
-    return isMock ? await mockExecute(question, handle) : await llmOrchestrate(question, handle, history);
+    return isMock ? await mockExecute(question, handle, user) : await llmOrchestrate(question, handle, history, user);
   } finally {
     if (!mcp) await handle.close();
   }
 }
 
-async function mockExecute(question: string, mcp: McpHandle): Promise<AgentResult> {
+async function mockExecute(question: string, mcp: McpHandle, user: User): Promise<AgentResult> {
   const intents = route(question);
   if (intents.length === 0) {
     return {
@@ -121,7 +122,7 @@ async function mockExecute(question: string, mcp: McpHandle): Promise<AgentResul
   const citations: string[] = [];
   for (const it of intents) {
     if (it.tool === "search_case_notes") {
-      const r = await ragAnswer(it.query);
+      const r = await ragAnswer(it.query, user.roles);
       parts.push(r.text); citations.push(...r.citations); toolsUsed.push("search_case_notes");
     } else if (it.tool === "get_weather") {
       parts.push((await mcp.callTool("get_weather", { location: it.location })).text); toolsUsed.push("get_weather");
@@ -139,14 +140,16 @@ async function mockExecute(question: string, mcp: McpHandle): Promise<AgentResul
   return { answer: parts.join("\n\n"), toolsUsed, citations };
 }
 
-async function llmOrchestrate(question: string, mcp: McpHandle, history: ChatMessage[] = []): Promise<AgentResult> {
+async function llmOrchestrate(question: string, mcp: McpHandle, history: ChatMessage[] = [], user: User = ANONYMOUS): Promise<AgentResult> {
   // Thread prior turns (rolling window) so follow-ups ("yes", "и что дальше?") keep context.
   const messages = [...trimHistory(history), { role: "user" as const, content: question }];
+  // RAG tool is scoped to the user's roles (ACL-aware retrieval).
+  const tools = { ...mcp.aiTools, ...makeRagTool(user.roles) };
   const result = await generateText({
     model: chatModel(),
     system: SYSTEM_PROMPT,
     messages,
-    tools: { ...mcp.aiTools, ...ragTool },
+    tools,
     stopWhen: stepCountIs(6),
   });
   const toolsUsed = [...new Set(result.steps.flatMap((s) => s.toolCalls.map((c) => c.toolName)))];

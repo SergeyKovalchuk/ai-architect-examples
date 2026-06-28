@@ -9,6 +9,10 @@ import { fileURLToPath } from "node:url";
 import { config } from "./config.js";
 import { ask } from "./agent.js";
 import { startMcp } from "./mcp-client.js";
+import type { User } from "./auth.js";
+
+// Evaluate as an authorized power user so every golden item is reachable.
+const EVAL_USER: User = { name: "eval", roles: ["public", "official", "admin"] };
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const golden = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "data", "golden.json"), "utf8"));
@@ -22,7 +26,7 @@ let toolOK = 0, ansOK = 0, citeTotal = 0, citeOK = 0, scopeOK = 0;
 const outScope = golden.questions.filter((q: any) => !q.inScope);
 
 for (const q of golden.questions) {
-  const { answer, toolsUsed, citations } = await ask(q.query, mcp);
+  const { answer, toolsUsed, citations } = await ask(q.query, mcp, [], EVAL_USER);
   const toolMatch = eqSet(toolsUsed, q.expectedTools);
   const lc = answer.toLowerCase();
   const contentMatch = q.expectedContains.every((k: string) => lc.includes(k.toLowerCase()));
