@@ -70,6 +70,19 @@ player-token   → cites public note  "supervisor-call"
 official-token → cites restricted   "confidential-disciplinary"   (officials only)
 ```
 
+## Grounded answers — structured output + enforced citations
+
+In the live (Azure/DIAL) path the agent returns a **typed object** — `{ answer, citations, refused }` — via the AI SDK's structured-output mode (`Output.object` + a Zod schema), instead of free text that has to be parsed. Citations are then **enforced**: only case ids that `search_case_notes` actually returned this turn are allowed, so the model cannot fabricate a source. If the model cites nothing but case notes were retrieved, the real sources are added; fabricated ids are dropped (`enforceCitations`, unit-tested). `refused=true` flags out-of-scope questions.
+
+## Abuse & cost controls (LLM10)
+
+`/api/ask` is protected by several bounded limits (all configurable in `.env`):
+
+- **Rate limiting** — `RATE_PER_MIN` requests/min per token-or-IP → `429` when exceeded (`@fastify/rate-limit`).
+- **Input limits** — `MAX_QUESTION_CHARS` (oversized → `400`) and `BODY_LIMIT_BYTES` (large body → `413`).
+- **Agent budget** — `MAX_STEPS` (bounded tool-call loop) and `MAX_OUTPUT_TOKENS` (caps model output / cost).
+- **CORS lockdown** — empty `CORS_ORIGINS` = same-origin only (no cross-origin headers); set an allowlist to permit specific origins (`@fastify/cors`).
+
 ## Architecture
 
 C4 **Container view** (the player, the app containers, the MCP servers, and external systems/data):

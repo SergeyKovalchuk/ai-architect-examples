@@ -1,7 +1,7 @@
 {
   "provider": "mock",
   "offline": true,
-  "generatedAt": "2026-06-28T17:42:40.888Z",
+  "generatedAt": "2026-06-28T17:55:31.567Z",
   "metrics": {
     "routingAccuracy": 1,
     "answerCorrectness": 1,

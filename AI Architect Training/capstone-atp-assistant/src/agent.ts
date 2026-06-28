@@ -1,7 +1,8 @@
 // The orchestrator. Two paths share one tool layer (MCP tools + RAG tool):
 //   - real (azure/dial): the LLM plans tool calls.
 //   - mock (offline):     a deterministic intent router (route) calls tools.
-import { generateText, stepCountIs } from "ai";
+import { generateText, stepCountIs, Output } from "ai";
+import { z } from "zod";
 import { isMock, config } from "./config.js";
 import { chatModel, SYSTEM_PROMPT } from "./provider.js";
 import { startMcp, type McpHandle } from "./mcp-client.js";
@@ -9,7 +10,22 @@ import { makeRagTool, ragAnswer } from "./rag-tool.js";
 import { knownPlayers } from "./atp.js";
 import { ANONYMOUS, type User } from "./auth.js";
 
-export interface AgentResult { answer: string; toolsUsed: string[]; citations: string[]; }
+export interface AgentResult { answer: string; toolsUsed: string[]; citations: string[]; refused: boolean; }
+
+// Structured final answer: the model must return this shape (not free text).
+const answerSchema = z.object({
+  answer: z.string().describe("The grounded answer for the user, based only on tool output."),
+  citations: z.array(z.string()).describe("case ids returned by search_case_notes that support the answer; [] if none used."),
+  refused: z.boolean().describe("true if the question is out of scope or cannot be answered from the tools."),
+});
+
+/** Keep only citations that were actually returned by search_case_notes (no fabricated sources). */
+export function enforceCitations(modelCitations: string[], allowed: Set<string>): string[] {
+  const valid = [...new Set(modelCitations)].filter((c) => allowed.has(c));
+  // If the model cited nothing but case notes were retrieved, fall back to the real sources.
+  if (valid.length === 0 && allowed.size > 0) return [...allowed];
+  return valid;
+}
 
 /* ─────────────────── intent routing (pure, testable) ─────────────────── */
 export type Intent =
@@ -114,7 +130,7 @@ async function mockExecute(question: string, mcp: McpHandle, user: User): Promis
   if (intents.length === 0) {
     return {
       answer: "I can help with ATP match data, weather at a venue, the latest tennis news, and on-court rules/precedents. Try one of those.",
-      toolsUsed: [], citations: [],
+      toolsUsed: [], citations: [], refused: true,
     };
   }
   const parts: string[] = [];
@@ -137,7 +153,7 @@ async function mockExecute(question: string, mcp: McpHandle, user: User): Promis
       parts.push((await mcp.callTool("query_matches", args as any)).text); toolsUsed.push("query_matches");
     }
   }
-  return { answer: parts.join("\n\n"), toolsUsed, citations };
+  return { answer: parts.join("\n\n"), toolsUsed, citations, refused: false };
 }
 
 async function llmOrchestrate(question: string, mcp: McpHandle, history: ChatMessage[] = [], user: User = ANONYMOUS): Promise<AgentResult> {
@@ -152,20 +168,25 @@ async function llmOrchestrate(question: string, mcp: McpHandle, history: ChatMes
     tools,
     stopWhen: stepCountIs(config.limits.maxSteps), // bounded agent loop
     maxOutputTokens: config.limits.maxOutputTokens, // cap output (cost/DoS)
+    // Final answer is a typed object (tools still run during the steps).
+    output: Output.object({ schema: answerSchema }),
   });
   const toolsUsed = [...new Set(result.steps.flatMap((s) => s.toolCalls.map((c) => c.toolName)))];
 
-  // Recover citations from the search_case_notes tool results (the tool returns
-  // a "Cite these case ids: ..." line). This is what makes citation accuracy
-  // measurable in the live LLM path, not just the mock path.
-  const citeSet = new Set<string>();
+  // Build the set of case ids actually returned by search_case_notes this run —
+  // the ONLY citations we allow (prevents hallucinated/fabricated sources).
+  const allowed = new Set<string>();
   const toolResults: any[] = (result as any).toolResults ?? result.steps.flatMap((s: any) => s.toolResults ?? []);
   for (const tr of toolResults) {
     if (tr?.toolName !== "search_case_notes") continue;
     const out = tr.output ?? tr.result ?? "";
     const text = typeof out === "string" ? out : JSON.stringify(out);
     const m = text.match(/case ids:\s*([^\n]+)/i);
-    if (m) for (const id of m[1].split(",")) { const v = id.trim(); if (v) citeSet.add(v); }
+    if (m) for (const id of m[1].split(",")) { const v = id.trim(); if (v) allowed.add(v); }
   }
-  return { answer: result.text.trim(), toolsUsed, citations: [...citeSet] };
+
+  const obj = (result as any).output as z.infer<typeof answerSchema> | undefined;
+  const answer = (obj?.answer ?? result.text ?? "").trim();
+  const citations = enforceCitations(obj?.citations ?? [], allowed);
+  return { answer, toolsUsed, citations, refused: obj?.refused ?? false };
 }
