@@ -1,7 +1,7 @@
 {
-  "provider": "dial",
-  "offline": false,
-  "generatedAt": "2026-06-27T18:28:36.794Z",
+  "provider": "mock",
+  "offline": true,
+  "generatedAt": "2026-06-28T17:34:21.933Z",
   "metrics": {
     "routingAccuracy": 1,
     "answerCorrectness": 1,
@@ -112,8 +112,7 @@
         "search_case_notes"
       ],
       "citations": [
-        "line-call-dispute",
-        "ball-mark-inspection"
+        "line-call-dispute"
       ]
     },
     {
@@ -124,9 +123,7 @@
         "search_case_notes"
       ],
       "citations": [
-        "medical-timeout",
-        "time-violation",
-        "weather-suspension"
+        "medical-timeout"
       ]
     },
     {
@@ -137,8 +134,7 @@
         "search_case_notes"
       ],
       "citations": [
-        "coaching-violation",
-        "line-call-dispute"
+        "coaching-violation"
       ]
     },
     {
@@ -149,9 +145,7 @@
         "search_case_notes"
       ],
       "citations": [
-        "time-violation",
-        "medical-timeout",
-        "coaching-violation"
+        "time-violation"
       ]
     },
     {
@@ -159,8 +153,8 @@
       "toolMatch": true,
       "contentMatch": true,
       "toolsUsed": [
-        "head_to_head",
-        "get_weather"
+        "get_weather",
+        "head_to_head"
       ],
       "citations": []
     },
@@ -169,8 +163,8 @@
       "toolMatch": true,
       "contentMatch": true,
       "toolsUsed": [
-        "head_to_head",
-        "get_weather"
+        "get_weather",
+        "head_to_head"
       ],
       "citations": []
     },
@@ -183,8 +177,7 @@
         "get_weather"
       ],
       "citations": [
-        "line-call-dispute",
-        "coaching-violation"
+        "line-call-dispute"
       ]
     },
     {

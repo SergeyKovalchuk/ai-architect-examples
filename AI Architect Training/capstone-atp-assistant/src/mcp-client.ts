@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { tool, jsonSchema, type ToolSet } from "ai";
+import { wrapUntrusted } from "./untrusted.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SERVERS = [
@@ -36,7 +37,8 @@ export async function startMcp(): Promise<McpHandle> {
       aiTools[t.name] = tool({
         description: t.description ?? "",
         inputSchema: jsonSchema(t.inputSchema as any),
-        execute: async (args) => (await callTool(t.name, args as Record<string, unknown>)).text,
+        // Wrap tool output as untrusted data before it reaches the model (LLM01).
+        execute: async (args) => wrapUntrusted(t.name, (await callTool(t.name, args as Record<string, unknown>)).text),
       });
     }
   }

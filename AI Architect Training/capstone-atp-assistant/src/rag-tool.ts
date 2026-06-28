@@ -3,6 +3,7 @@
 import { tool } from "ai";
 import { z } from "zod";
 import { ragContext } from "./rag.js";
+import { wrapUntrusted } from "./untrusted.js";
 
 export const ragTool = {
   search_case_notes: tool({
@@ -11,7 +12,9 @@ export const ragTool = {
     inputSchema: z.object({ query: z.string().describe("The player's rules/precedent question") }),
     execute: async ({ query }) => {
       const { context, citations } = await ragContext(query, 3);
-      return `Relevant case notes:\n${context}\n\nCite these case ids: ${citations.map((c) => c.caseId).join(", ")}`;
+      // Retrieved corpus text is untrusted data (LLM01) — wrap before the model sees it.
+      const body = `Relevant case notes:\n${context}\n\nCite these case ids: ${citations.map((c) => c.caseId).join(", ")}`;
+      return wrapUntrusted("search_case_notes", body);
     },
   }),
 };
