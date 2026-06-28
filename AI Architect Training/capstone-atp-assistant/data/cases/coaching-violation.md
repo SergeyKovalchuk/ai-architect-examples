@@ -2,6 +2,7 @@
 id: coaching-violation
 title: Coaching signals from the box (coaching code violation)
 tags: [coaching, signals, box, code violation, supervisor]
+roles: [public]
 ---
 A player is warned for receiving coaching. Coaching rules have varied: historically any
 signal or instruction from the coach's box was a code violation; under newer trials,

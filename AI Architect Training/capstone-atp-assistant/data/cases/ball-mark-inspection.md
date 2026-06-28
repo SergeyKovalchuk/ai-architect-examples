@@ -2,6 +2,7 @@
 id: ball-mark-inspection
 title: Clay-court ball mark inspection
 tags: [ball mark, clay, inspection, umpire, line call]
+roles: [public]
 ---
 On clay, a player asks the chair umpire to inspect the ball mark after a close call. The
 umpire may leave the chair to identify the correct mark and rule on whether the ball was

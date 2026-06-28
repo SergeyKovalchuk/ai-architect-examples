@@ -2,6 +2,7 @@
 id: time-violation
 title: Shot clock and time between points
 tags: [shot clock, time violation, 25 seconds, bathroom break, delay]
+roles: [public]
 ---
 A player is penalized for taking too long between points. A 25-second shot clock runs
 between points; serving after it expires draws a time violation. The first time violation

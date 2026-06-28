@@ -2,6 +2,7 @@
 id: weather-suspension
 title: Suspension of play for rain or extreme heat
 tags: [rain delay, extreme heat policy, suspension, resumption, weather]
+roles: [public]
 ---
 Play is suspended due to weather. The chair umpire suspends play for rain or unsafe
 conditions; under an Extreme Heat Policy, play may be paused and a heat break granted

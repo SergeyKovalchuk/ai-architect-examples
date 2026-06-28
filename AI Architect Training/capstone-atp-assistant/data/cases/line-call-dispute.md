@@ -2,6 +2,7 @@
 id: line-call-dispute
 title: Disputing a line call (Hawk-Eye / Electronic Line Calling)
 tags: [line call, hawk-eye, challenge, electronic line calling, umpire]
+roles: [public]
 ---
 A player disputes a line call and asks to challenge. On hard and grass courts using
 Electronic Line Calling (ELC / Hawk-Eye Live), the electronic call is final and there

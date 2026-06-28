@@ -2,6 +2,7 @@
 id: supervisor-call
 title: When and how a supervisor or referee is called
 tags: [supervisor, referee, appeal, procedure, rules dispute]
+roles: [public]
 ---
 A player wants to call a supervisor. A player may request the chair umpire to summon the
 supervisor when they believe a rule or procedure was applied incorrectly. The supervisor

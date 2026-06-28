@@ -2,6 +2,7 @@
 id: medical-timeout
 title: Medical timeouts and physio assessment
 tags: [medical timeout, MTO, injury, physio, gamesmanship]
+roles: [public]
 ---
 A player requests a medical timeout. The player may receive evaluation and one medical
 timeout (typically three minutes of treatment) per distinct treatable medical condition,
