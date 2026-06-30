@@ -1,0 +1,36 @@
+{
+  "name": "match-assistant",
+  "version": "1.0.0",
+  "description": "ATP match-assistant chatbot — agent orchestrating RAG + MCP tools (ATP data via Arquero, weather, news).",
+  "type": "module",
+  "scripts": {
+    "test": "PROVIDER=mock OFFLINE=1 vitest run",
+    "atp-server": "tsx src/mcp/atp-server.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "weather-server": "tsx src/mcp/weather-server.ts",
+    "news-server": "tsx src/mcp/news-server.ts",
+    "ask": "tsx src/cli.ts",
+    "serve": "tsx src/server.ts",
+    "eval": "tsx src/eval.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "arquero": "^8.0.0",
+    "zod": "^4.0.0",
+    "dotenv": "^17.0.0",
+    "fast-xml-parser": "^5.0.0",
+    "ai": "^7.0.0",
+    "@ai-sdk/azure": "^4.0.0",
+    "@ai-sdk/openai-compatible": "^3.0.0",
+    "fastify": "^5.0.0",
+    "@fastify/static": "^8.0.0",
+    "@fastify/cors": "^11.0.0",
+    "@fastify/rate-limit": "^11.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^4.0.0"
+  }
+}
